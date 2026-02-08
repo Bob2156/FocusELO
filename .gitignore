@@ -1,0 +1,17 @@
+# Build artifacts
+build/
+dist/
+*.spec
+__pycache__/
+*.pyc
+
+# Backups
+index_backup.html
+
+# OS files
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Shortcuts
+*.lnk

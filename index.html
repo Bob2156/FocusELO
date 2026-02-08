@@ -1,0 +1,4155 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Focus ELO</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+
+
+    :root {
+
+      --bg: #0a0a0f;
+
+      --surface: #12121a;
+
+      --surface2: #1a1a26;
+
+      --border: #2a2a3a;
+
+      --text: #e8e8f0;
+
+      --text-dim: #8888a0;
+
+      --accent: #7c5cfc;
+
+      --accent-glow: rgba(124, 92, 252, 0.3);
+
+      --win: #22c55e;
+
+      --draw: #f59e0b;
+
+      --loss: #ef4444;
+
+      --trenches: #6b7280;
+
+      --bronze: #cd7f32;
+
+      --silver: #c0c0c0;
+
+      --gold: #ffd700;
+
+      --starlight: #a78bfa;
+
+      --prestige: #ec4899;
+
+    }
+
+
+
+    html { font-size: 16px; }
+
+    body {
+
+      font-family: 'Inter', -apple-system, sans-serif;
+
+      background: var(--bg);
+
+      color: var(--text);
+
+      min-height: 100vh;
+
+      overflow-x: hidden;
+
+    }
+
+
+
+    /* ── Ambient background ── */
+
+    body::before {
+
+      content: '';
+
+      position: fixed;
+
+      top: -50%;
+
+      left: -50%;
+
+      width: 200%;
+
+      height: 200%;
+
+      background: radial-gradient(ellipse at 30% 20%, rgba(124,92,252,0.06) 0%, transparent 50%),
+
+                  radial-gradient(ellipse at 70% 80%, rgba(236,72,153,0.04) 0%, transparent 50%);
+
+      z-index: 0;
+
+      pointer-events: none;
+
+      animation: ambientDrift 20s ease-in-out infinite alternate;
+
+    }
+
+    @keyframes ambientDrift {
+
+      0% { transform: translate(0, 0) rotate(0deg); }
+
+      100% { transform: translate(-3%, 2%) rotate(3deg); }
+
+    }
+
+
+
+    .app {
+
+      position: relative;
+
+      z-index: 1;
+
+      max-width: 860px;
+
+      margin: 0 auto;
+
+      padding: 24px 16px 80px;
+
+    }
+
+
+
+    /* ── Header ── */
+
+    .header {
+
+      text-align: center;
+
+      margin-bottom: 32px;
+
+    }
+
+    .header h1 {
+
+      font-size: 1.75rem;
+
+      font-weight: 800;
+
+      letter-spacing: -0.03em;
+
+      background: linear-gradient(135deg, #7c5cfc 0%, #ec4899 100%);
+
+      -webkit-background-clip: text;
+
+      -webkit-text-fill-color: transparent;
+
+      background-clip: text;
+
+    }
+
+    .header p {
+
+      font-size: 0.8rem;
+
+      color: var(--text-dim);
+
+      margin-top: 4px;
+
+      letter-spacing: 0.08em;
+
+      text-transform: uppercase;
+
+    }
+
+
+
+    /* ── Cards ── */
+
+    .card {
+
+      background: var(--surface);
+
+      border: 1px solid var(--border);
+
+      border-radius: 16px;
+
+      padding: 24px;
+
+      margin-bottom: 16px;
+
+      transition: border-color 0.3s;
+
+    }
+
+    .card:hover { border-color: #3a3a50; }
+
+    .card-title {
+
+      font-size: 0.7rem;
+
+      font-weight: 600;
+
+      letter-spacing: 0.1em;
+
+      text-transform: uppercase;
+
+      color: var(--text-dim);
+
+      margin-bottom: 16px;
+
+    }
+
+
+
+    /* ── ELO Display ── */
+
+    .elo-display {
+
+      text-align: center;
+
+      padding: 32px 24px;
+
+      position: relative;
+
+      overflow: hidden;
+
+    }
+
+    .elo-display::before {
+
+      content: '';
+
+      position: absolute;
+
+      inset: 0;
+
+      border-radius: 16px;
+
+      opacity: 0.08;
+
+      transition: opacity 0.5s;
+
+    }
+
+    .elo-display:hover::before { opacity: 0.12; }
+
+
+
+    .tier-badge {
+
+      display: inline-flex;
+
+      align-items: center;
+
+      gap: 6px;
+
+      padding: 5px 14px;
+
+      border-radius: 100px;
+
+      font-size: 0.75rem;
+
+      font-weight: 700;
+
+      letter-spacing: 0.08em;
+
+      text-transform: uppercase;
+
+      margin-bottom: 12px;
+
+      transition: all 0.4s;
+
+    }
+
+    .tier-badge .tier-dot {
+
+      width: 8px;
+
+      height: 8px;
+
+      border-radius: 50%;
+
+      animation: tierPulse 2s ease-in-out infinite;
+
+    }
+
+    @keyframes tierPulse {
+
+      0%, 100% { opacity: 1; transform: scale(1); }
+
+      50% { opacity: 0.5; transform: scale(0.8); }
+
+    }
+
+
+
+    .tier-trenches .tier-badge  { background: rgba(107,114,128,0.15); color: #9ca3af; }
+
+    .tier-trenches .tier-dot    { background: var(--trenches); }
+
+    .tier-bronze .tier-badge    { background: rgba(205,127,50,0.15); color: #cd7f32; }
+
+    .tier-bronze .tier-dot      { background: var(--bronze); }
+
+    .tier-silver .tier-badge    { background: rgba(192,192,192,0.15); color: #d4d4d4; }
+
+    .tier-silver .tier-dot      { background: var(--silver); }
+
+    .tier-gold .tier-badge      { background: rgba(255,215,0,0.12); color: #ffd700; }
+
+    .tier-gold .tier-dot        { background: var(--gold); }
+
+    .tier-starlight .tier-badge { background: rgba(167,139,250,0.15); color: #c4b5fd; }
+
+    .tier-starlight .tier-dot   { background: var(--starlight); }
+
+    .tier-prestige .tier-badge  { background: rgba(236,72,153,0.15); color: #f472b6; }
+
+    .tier-prestige .tier-dot    { background: var(--prestige); box-shadow: 0 0 8px var(--prestige); }
+
+
+
+    .elo-number {
+
+      font-family: 'JetBrains Mono', monospace;
+
+      font-size: 4rem;
+
+      font-weight: 700;
+
+      line-height: 1;
+
+      margin-bottom: 8px;
+
+      transition: color 0.4s;
+
+    }
+
+    .tier-trenches .elo-number  { color: #9ca3af; }
+
+    .tier-bronze .elo-number    { color: #cd7f32; }
+
+    .tier-silver .elo-number    { color: #d4d4d4; }
+
+    .tier-gold .elo-number      { color: #ffd700; }
+
+    .tier-starlight .elo-number { color: #c4b5fd; }
+
+    .tier-prestige .elo-number  { color: #f472b6; }
+
+
+
+    .elo-label {
+
+      font-size: 0.75rem;
+
+      color: var(--text-dim);
+
+      letter-spacing: 0.05em;
+
+    }
+
+    .elo-change {
+
+      font-family: 'JetBrains Mono', monospace;
+
+      font-size: 1rem;
+
+      font-weight: 600;
+
+      margin-top: 8px;
+
+      opacity: 0;
+
+      transform: translateY(8px);
+
+      transition: all 0.4s;
+
+    }
+
+    .elo-change.show {
+
+      opacity: 1;
+
+      transform: translateY(0);
+
+    }
+
+    .elo-change.positive { color: var(--win); }
+
+    .elo-change.negative { color: var(--loss); }
+
+    .elo-change.neutral  { color: var(--draw); }
+
+
+
+    /* ── Tier Progress Bar ── */
+
+    .tier-progress {
+
+      margin-top: 20px;
+
+    }
+
+    .tier-progress-labels {
+
+      display: flex;
+
+      justify-content: space-between;
+
+      font-size: 0.65rem;
+
+      color: var(--text-dim);
+
+      margin-bottom: 6px;
+
+      font-family: 'JetBrains Mono', monospace;
+
+    }
+
+    .tier-progress-bar {
+
+      height: 6px;
+
+      background: var(--surface2);
+
+      border-radius: 100px;
+
+      overflow: hidden;
+
+      position: relative;
+
+    }
+
+    .tier-progress-fill {
+
+      height: 100%;
+
+      border-radius: 100px;
+
+      transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.4s;
+
+      position: relative;
+
+    }
+
+    .tier-progress-fill::after {
+
+      content: '';
+
+      position: absolute;
+
+      right: 0;
+
+      top: 0;
+
+      width: 20px;
+
+      height: 100%;
+
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3));
+
+      border-radius: 100px;
+
+    }
+
+
+
+    /* ── Timer ── */
+
+    .timer-section { text-align: center; }
+
+    .timer-ring-container {
+
+      position: relative;
+
+      width: 200px;
+
+      height: 200px;
+
+      margin: 0 auto 20px;
+
+    }
+
+    .timer-ring {
+
+      width: 200px;
+
+      height: 200px;
+
+      transform: rotate(-90deg);
+
+    }
+
+    .timer-ring-bg {
+
+      fill: none;
+
+      stroke: var(--surface2);
+
+      stroke-width: 6;
+
+    }
+
+    .timer-ring-progress {
+
+      fill: none;
+
+      stroke: var(--accent);
+
+      stroke-width: 6;
+
+      stroke-linecap: round;
+
+      stroke-dasharray: 565.48;
+
+      stroke-dashoffset: 0;
+
+      transition: stroke 0.4s;
+
+      filter: drop-shadow(0 0 6px var(--accent-glow));
+
+    }
+
+    .timer-ring-progress.break-mode {
+
+      stroke: var(--draw);
+
+      filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.3));
+
+    }
+
+    .timer-text {
+
+      position: absolute;
+
+      top: 50%;
+
+      left: 50%;
+
+      transform: translate(-50%, -50%);
+
+      text-align: center;
+
+    }
+
+    .timer-time {
+
+      font-family: 'JetBrains Mono', monospace;
+
+      font-size: 2.8rem;
+
+      font-weight: 700;
+
+      line-height: 1;
+
+    }
+
+    .timer-phase {
+
+      font-size: 0.7rem;
+
+      color: var(--text-dim);
+
+      text-transform: uppercase;
+
+      letter-spacing: 0.1em;
+
+      margin-top: 4px;
+
+    }
+
+    .timer-controls {
+
+      display: flex;
+
+      gap: 10px;
+
+      justify-content: center;
+
+      flex-wrap: wrap;
+
+    }
+
+
+
+    /* ── Buttons ── */
+
+    .btn {
+
+      display: inline-flex;
+
+      align-items: center;
+
+      justify-content: center;
+
+      gap: 6px;
+
+      padding: 10px 20px;
+
+      border: none;
+
+      border-radius: 10px;
+
+      font-family: 'Inter', sans-serif;
+
+      font-size: 0.8rem;
+
+      font-weight: 600;
+
+      cursor: pointer;
+
+      transition: all 0.2s;
+
+      letter-spacing: 0.02em;
+
+    }
+
+    .btn:active { transform: scale(0.96); }
+
+    .btn:disabled {
+
+      opacity: 0.35;
+
+      cursor: not-allowed;
+
+      transform: none;
+
+    }
+
+    .btn-primary {
+
+      background: var(--accent);
+
+      color: #fff;
+
+      box-shadow: 0 2px 12px var(--accent-glow);
+
+    }
+
+    .btn-primary:hover:not(:disabled) {
+
+      background: #6b4be0;
+
+      box-shadow: 0 4px 20px var(--accent-glow);
+
+    }
+
+    .btn-ghost {
+
+      background: var(--surface2);
+
+      color: var(--text);
+
+      border: 1px solid var(--border);
+
+    }
+
+    .btn-ghost:hover:not(:disabled) { background: #222233; }
+
+
+
+    .btn-win   { background: rgba(34,197,94,0.15); color: var(--win); border: 1px solid rgba(34,197,94,0.3); }
+
+    .btn-win:hover:not(:disabled) { background: rgba(34,197,94,0.25); }
+
+    .btn-draw  { background: rgba(245,158,11,0.15); color: var(--draw); border: 1px solid rgba(245,158,11,0.3); }
+
+    .btn-draw:hover:not(:disabled) { background: rgba(245,158,11,0.25); }
+
+    .btn-loss  { background: rgba(239,68,68,0.15); color: var(--loss); border: 1px solid rgba(239,68,68,0.3); }
+
+    .btn-loss:hover:not(:disabled) { background: rgba(239,68,68,0.25); }
+
+
+
+    /* ── Report Section ── */
+
+    .report-section {
+
+      text-align: center;
+
+    }
+
+    .report-buttons {
+
+      display: flex;
+
+      gap: 10px;
+
+      justify-content: center;
+
+      margin-top: 8px;
+
+    }
+
+    .report-buttons .btn {
+
+      flex: 1;
+
+      padding: 14px 10px;
+
+      font-size: 0.85rem;
+
+      font-weight: 700;
+
+      border-radius: 12px;
+
+    }
+
+
+
+    /* ── Stats Grid ── */
+
+    .stats-grid {
+
+      display: grid;
+
+      grid-template-columns: repeat(3, 1fr);
+
+      gap: 12px;
+
+    }
+
+    .stat-item {
+
+      text-align: center;
+
+      padding: 14px 8px;
+
+      background: var(--surface2);
+
+      border-radius: 12px;
+
+    }
+
+    .stat-value {
+
+      font-family: 'JetBrains Mono', monospace;
+
+      font-size: 1.3rem;
+
+      font-weight: 700;
+
+      color: var(--text);
+
+    }
+
+    .stat-value.win-color  { color: var(--win); }
+
+    .stat-value.draw-color { color: var(--draw); }
+
+    .stat-value.loss-color { color: var(--loss); }
+
+    .stat-label {
+
+      font-size: 0.65rem;
+
+      color: var(--text-dim);
+
+      text-transform: uppercase;
+
+      letter-spacing: 0.08em;
+
+      margin-top: 4px;
+
+    }
+
+
+
+    /* ── Streak ── */
+
+    .streak-bar {
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: center;
+
+      gap: 8px;
+
+      padding: 10px;
+
+      background: var(--surface2);
+
+      border-radius: 10px;
+
+      margin-top: 12px;
+
+    }
+
+    .streak-bar .streak-icon {
+
+      font-size: 1.1rem;
+
+    }
+
+    .streak-bar .streak-text {
+
+      font-size: 0.8rem;
+
+      font-weight: 600;
+
+    }
+
+
+
+    /* ── Tier Map ── */
+
+    .tier-map {
+
+      display: flex;
+
+      flex-direction: column;
+
+      gap: 6px;
+
+    }
+
+    .tier-row {
+
+      display: flex;
+
+      align-items: center;
+
+      gap: 12px;
+
+      padding: 10px 14px;
+
+      border-radius: 10px;
+
+      background: var(--surface2);
+
+      transition: all 0.3s;
+
+      font-size: 0.8rem;
+
+    }
+
+    .tier-row.active {
+
+      border: 1px solid var(--border);
+
+      background: rgba(124, 92, 252, 0.06);
+
+    }
+
+    .tier-row .tier-icon { font-size: 1rem; width: 24px; text-align: center; }
+
+    .tier-row .tier-name { font-weight: 600; flex: 1; }
+
+    .tier-row .tier-range { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text-dim); }
+
+    .tier-row .tier-indicator {
+
+      width: 8px;
+
+      height: 8px;
+
+      border-radius: 50%;
+
+      background: var(--accent);
+
+      animation: tierPulse 2s ease-in-out infinite;
+
+      display: none;
+
+    }
+
+    .tier-row.active .tier-indicator { display: block; }
+
+
+
+    /* ── Scoring Table ── */
+
+    .scoring-table {
+
+      width: 100%;
+
+      border-collapse: separate;
+
+      border-spacing: 0 4px;
+
+    }
+
+    .scoring-table th {
+
+      font-size: 0.65rem;
+
+      font-weight: 600;
+
+      color: var(--text-dim);
+
+      text-transform: uppercase;
+
+      letter-spacing: 0.08em;
+
+      padding: 8px 12px;
+
+      text-align: left;
+
+    }
+
+    .scoring-table td {
+
+      padding: 10px 12px;
+
+      font-size: 0.8rem;
+
+      background: var(--surface2);
+
+    }
+
+    .scoring-table tr td:first-child { border-radius: 8px 0 0 8px; }
+
+    .scoring-table tr td:last-child  { border-radius: 0 8px 8px 0; }
+
+    .scoring-table .score-positive { color: var(--win); font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+
+    .scoring-table .score-negative { color: var(--loss); font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+
+    .scoring-table .score-neutral  { color: var(--text-dim); font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+
+
+
+    /* ── History ── */
+
+    .history-list {
+
+      display: flex;
+
+      flex-direction: column;
+
+      gap: 6px;
+
+      max-height: 360px;
+
+      overflow-y: auto;
+
+      scrollbar-width: thin;
+
+      scrollbar-color: var(--border) transparent;
+
+    }
+
+    .history-item {
+
+      display: flex;
+
+      align-items: center;
+
+      gap: 12px;
+
+      padding: 12px 14px;
+
+      background: var(--surface2);
+
+      border-radius: 10px;
+
+      animation: slideIn 0.3s ease-out;
+
+    }
+
+    @keyframes slideIn {
+
+      from { opacity: 0; transform: translateY(-8px); }
+
+      to   { opacity: 1; transform: translateY(0); }
+
+    }
+
+    .history-badge {
+
+      width: 40px;
+
+      height: 40px;
+
+      border-radius: 10px;
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: center;
+
+      font-weight: 800;
+
+      font-size: 0.7rem;
+
+      text-transform: uppercase;
+
+      flex-shrink: 0;
+
+    }
+
+    .history-badge.win  { background: rgba(34,197,94,0.15); color: var(--win); }
+
+    .history-badge.draw { background: rgba(245,158,11,0.15); color: var(--draw); }
+
+    .history-badge.loss { background: rgba(239,68,68,0.15); color: var(--loss); }
+
+
+
+    .history-info { flex: 1; min-width: 0; }
+
+    .history-info .history-block {
+
+      font-size: 0.8rem;
+
+      font-weight: 600;
+
+    }
+
+    .history-info .history-time {
+
+      font-size: 0.65rem;
+
+      color: var(--text-dim);
+
+      margin-top: 2px;
+
+    }
+
+    .history-elo {
+
+      text-align: right;
+
+      flex-shrink: 0;
+
+    }
+
+    .history-elo .elo-after {
+
+      font-family: 'JetBrains Mono', monospace;
+
+      font-weight: 700;
+
+      font-size: 0.85rem;
+
+    }
+
+    .history-elo .elo-delta {
+
+      font-family: 'JetBrains Mono', monospace;
+
+      font-size: 0.7rem;
+
+      margin-top: 2px;
+
+    }
+
+    .history-elo .elo-delta.positive { color: var(--win); }
+
+    .history-elo .elo-delta.negative { color: var(--loss); }
+
+    .history-elo .elo-delta.neutral  { color: var(--text-dim); }
+
+
+
+    .empty-history {
+
+      text-align: center;
+
+      padding: 32px 16px;
+
+      color: var(--text-dim);
+
+      font-size: 0.85rem;
+
+    }
+
+    .empty-history .empty-icon {
+
+      font-size: 2rem;
+
+      margin-bottom: 8px;
+
+    }
+
+
+
+    /* ── Setup Modal ── */
+
+    .modal-overlay {
+
+      position: fixed;
+
+      inset: 0;
+
+      background: rgba(0,0,0,0.7);
+
+      backdrop-filter: blur(8px);
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: center;
+
+      z-index: 100;
+
+      padding: 16px;
+
+      animation: fadeIn 0.3s;
+
+    }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .modal {
+
+      background: var(--surface);
+
+      border: 1px solid var(--border);
+
+      border-radius: 20px;
+
+      padding: 32px;
+
+      max-width: 400px;
+
+      width: 100%;
+
+      animation: modalPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    }
+
+    @keyframes modalPop {
+
+      from { opacity: 0; transform: scale(0.9) translateY(20px); }
+
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+
+    }
+
+    .modal h2 {
+
+      font-size: 1.3rem;
+
+      font-weight: 800;
+
+      margin-bottom: 4px;
+
+    }
+
+    .modal p {
+
+      font-size: 0.85rem;
+
+      color: var(--text-dim);
+
+      margin-bottom: 20px;
+
+      line-height: 1.5;
+
+    }
+
+    .modal input[type="number"] {
+
+      width: 100%;
+
+      padding: 12px 16px;
+
+      background: var(--surface2);
+
+      border: 1px solid var(--border);
+
+      border-radius: 10px;
+
+      color: var(--text);
+
+      font-family: 'JetBrains Mono', monospace;
+
+      font-size: 1.1rem;
+
+      text-align: center;
+
+      margin-bottom: 12px;
+
+      outline: none;
+
+      transition: border-color 0.2s;
+
+    }
+
+    .modal input[type="number"]:focus { border-color: var(--accent); }
+
+    .modal input[type="number"]::-webkit-inner-spin-button,
+
+    .modal input[type="number"]::-webkit-outer-spin-button {
+
+      -webkit-appearance: none;
+
+    }
+
+    .modal-buttons {
+
+      display: flex;
+
+      gap: 10px;
+
+    }
+
+    .modal-buttons .btn { flex: 1; }
+
+
+
+    /* ── Prestige Banner ── */
+
+    .prestige-banner {
+
+      display: none;
+
+      text-align: center;
+
+      padding: 20px;
+
+      background: linear-gradient(135deg, rgba(236,72,153,0.1) 0%, rgba(167,139,250,0.1) 100%);
+
+      border: 1px solid rgba(236,72,153,0.3);
+
+      border-radius: 16px;
+
+      margin-bottom: 16px;
+
+      animation: prestigeGlow 3s ease-in-out infinite alternate;
+
+    }
+
+    @keyframes prestigeGlow {
+
+      0% { box-shadow: 0 0 20px rgba(236,72,153,0.1); }
+
+      100% { box-shadow: 0 0 40px rgba(236,72,153,0.2); }
+
+    }
+
+    .prestige-banner.show { display: block; }
+
+    .prestige-banner .prestige-icon { font-size: 2rem; margin-bottom: 6px; }
+
+    .prestige-banner .prestige-text {
+
+      font-size: 0.85rem;
+
+      font-weight: 700;
+
+      color: #f472b6;
+
+    }
+
+    .prestige-banner .prestige-sub {
+
+      font-size: 0.72rem;
+
+      color: var(--text-dim);
+
+      margin-top: 4px;
+
+    }
+
+
+
+    /* ── Reset ── */
+
+    .reset-row {
+
+      text-align: center;
+
+      margin-top: 8px;
+
+    }
+
+    .reset-link {
+
+      background: none;
+
+      border: none;
+
+      color: var(--text-dim);
+
+      font-size: 0.7rem;
+
+      cursor: pointer;
+
+      text-decoration: underline;
+
+      text-underline-offset: 3px;
+
+      font-family: 'Inter', sans-serif;
+
+      opacity: 0.6;
+
+      transition: opacity 0.2s;
+
+    }
+
+    .reset-link:hover { opacity: 1; color: var(--loss); }
+
+
+
+    /* ── Sound toggle ── */
+
+    .sound-toggle {
+
+      position: fixed;
+
+      top: 16px;
+
+      right: 16px;
+
+      z-index: 50;
+
+      background: var(--surface);
+
+      border: 1px solid var(--border);
+
+      border-radius: 10px;
+
+      width: 38px;
+
+      height: 38px;
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: center;
+
+      cursor: pointer;
+
+      font-size: 1rem;
+
+      transition: all 0.2s;
+
+      color: var(--text-dim);
+
+    }
+
+    .sound-toggle:hover { border-color: var(--accent); color: var(--text); }
+
+
+
+    /* ── Confetti ── */
+
+    .confetti-container {
+
+      position: fixed;
+
+      top: 0;
+
+      left: 0;
+
+      width: 100%;
+
+      height: 100%;
+
+      pointer-events: none;
+
+      z-index: 200;
+
+      overflow: hidden;
+
+    }
+
+    .confetti {
+
+      position: absolute;
+
+      width: 8px;
+
+      height: 8px;
+
+      border-radius: 2px;
+
+      animation: confettiFall 3s ease-in forwards;
+
+    }
+
+    @keyframes confettiFall {
+
+      0%   { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+
+      100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+
+    }
+
+
+
+    /* ── Notification Toast ── */
+
+    .toast {
+
+      position: fixed;
+
+      bottom: 24px;
+
+      left: 50%;
+
+      transform: translateX(-50%) translateY(80px);
+
+      background: var(--surface);
+
+      border: 1px solid var(--border);
+
+      border-radius: 12px;
+
+      padding: 12px 20px;
+
+      font-size: 0.8rem;
+
+      font-weight: 600;
+
+      z-index: 150;
+
+      opacity: 0;
+
+      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+      white-space: nowrap;
+
+    }
+
+    .toast.show {
+
+      transform: translateX(-50%) translateY(0);
+
+      opacity: 1;
+
+    }
+
+    .toast.promotion { border-color: var(--accent); color: var(--accent); }
+
+    .toast.demotion  { border-color: var(--loss); color: var(--loss); }
+
+
+
+
+    /* ── Undo Banner ── */
+    .undo-banner {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      margin-top: 10px;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 0.78rem;
+      animation: slideIn 0.3s ease-out;
+    }
+    .undo-banner.show { display: flex; }
+    .undo-banner .undo-msg { color: var(--text-dim); }
+    .undo-banner .undo-btn {
+      background: transparent;
+      border: 1.5px solid var(--primary);
+      color: var(--primary);
+      border-radius: 8px;
+      padding: 5px 14px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+    .undo-banner .undo-btn:hover { background: var(--primary); color: #fff; }
+
+    /* ── History Edit ── */
+    .history-actions {
+      display: flex;
+      gap: 4px;
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+    .history-actions button {
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-size: 0.72rem;
+      padding: 4px 6px;
+      border-radius: 6px;
+      transition: all 0.15s;
+      opacity: 0;
+    }
+    .history-item:hover .history-actions button { opacity: 1; }
+    .history-actions button:hover { background: var(--surface); color: var(--text); }
+    .history-actions .btn-edit:hover { color: var(--primary); }
+    .history-actions .btn-del:hover { color: var(--loss); }
+
+    /* ── Honesty Modal ── */
+    .honesty-check {
+      background: rgba(239, 68, 68, 0.06);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      border-radius: 10px;
+      padding: 14px;
+      margin: 14px 0 4px;
+    }
+    .honesty-check label {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      cursor: pointer;
+      line-height: 1.5;
+    }
+    .honesty-check input[type="checkbox"] {
+      margin-top: 3px;
+      accent-color: var(--primary);
+      flex-shrink: 0;
+    }
+    .modal .btn-danger {
+      background: var(--loss);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 20px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .modal .btn-danger:hover { filter: brightness(1.1); }
+    .modal .btn-danger:disabled { opacity: 0.35; cursor: not-allowed; }
+    .edit-result-options {
+      display: flex;
+      gap: 8px;
+      margin: 16px 0;
+    }
+    .edit-result-options .btn {
+      flex: 1;
+      padding: 10px 0;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: 2px solid transparent;
+      opacity: 0.5;
+    }
+    .edit-result-options .btn.selected {
+      opacity: 1;
+      transform: scale(1.03);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+    }
+    .edit-result-options .btn-win.selected { border-color: var(--win); }
+    .edit-result-options .btn-draw.selected { border-color: var(--gold); }
+    .edit-result-options .btn-loss.selected { border-color: var(--loss); }
+
+    /* ── Responsive ── */
+
+    @media (max-width: 400px) {
+
+      .elo-number { font-size: 3rem; }
+
+      .timer-ring-container { width: 170px; height: 170px; }
+
+      .timer-ring { width: 170px; height: 170px; }
+
+      .timer-time { font-size: 2.3rem; }
+
+      .report-buttons { flex-direction: column; }
+
+    }
+
+
+
+    /* ── Rules Toggle ── */
+
+    .rules-toggle {
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: space-between;
+
+      cursor: pointer;
+
+      user-select: none;
+
+    }
+
+    .rules-toggle .chevron {
+
+      transition: transform 0.3s;
+
+      font-size: 0.8rem;
+
+      color: var(--text-dim);
+
+    }
+
+    .rules-toggle.open .chevron { transform: rotate(180deg); }
+
+    .rules-content {
+
+      max-height: 0;
+
+      overflow: hidden;
+
+      transition: max-height 0.4s ease;
+
+    }
+
+    .rules-content.open { max-height: 600px; }
+
+    .rules-content .rule-item {
+
+      display: flex;
+
+      align-items: flex-start;
+
+      gap: 8px;
+
+      padding: 6px 0;
+
+      font-size: 0.78rem;
+
+      color: var(--text-dim);
+
+      line-height: 1.5;
+
+    }
+
+    .rules-content .rule-icon { flex-shrink: 0; }
+
+
+
+    /* ── Tabs ── */
+
+    .tab-bar {
+
+      display: flex;
+
+      background: var(--surface2);
+
+      border-radius: 10px;
+
+      padding: 3px;
+
+      margin-bottom: 16px;
+
+    }
+
+    .tab-btn {
+
+      flex: 1;
+
+      padding: 8px 12px;
+
+      border: none;
+
+      background: none;
+
+      color: var(--text-dim);
+
+      font-family: 'Inter', sans-serif;
+
+      font-size: 0.75rem;
+
+      font-weight: 600;
+
+      border-radius: 8px;
+
+      cursor: pointer;
+
+      transition: all 0.2s;
+
+      text-transform: uppercase;
+
+      letter-spacing: 0.06em;
+
+    }
+
+    .tab-btn.active {
+
+      background: var(--accent);
+
+      color: #fff;
+
+      box-shadow: 0 2px 8px var(--accent-glow);
+
+    }
+
+    .tab-panel { display: none; }
+
+    .tab-panel.active { display: block; }
+
+
+
+    /* ── Daily Progress ── */
+
+    .daily-progress { text-align: center; }
+
+    .daily-header {
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: space-between;
+
+      margin-bottom: 16px;
+
+    }
+
+    .daily-header .daily-date {
+
+      font-size: 0.7rem;
+
+      color: var(--text-dim);
+
+      font-weight: 500;
+
+    }
+
+    .daily-stats-row {
+
+      display: grid;
+
+      grid-template-columns: repeat(3, 1fr);
+
+      gap: 10px;
+
+      margin-bottom: 16px;
+
+    }
+
+    .daily-stat {
+
+      text-align: center;
+
+      padding: 12px 6px;
+
+      background: var(--surface2);
+
+      border-radius: 10px;
+
+    }
+
+    .daily-stat-value {
+
+      font-family: 'JetBrains Mono', monospace;
+
+      font-size: 1.2rem;
+
+      font-weight: 700;
+
+    }
+
+    .daily-stat-label {
+
+      font-size: 0.6rem;
+
+      color: var(--text-dim);
+
+      text-transform: uppercase;
+
+      letter-spacing: 0.06em;
+
+      margin-top: 3px;
+
+    }
+
+    .daily-bar-container {
+
+      margin-top: 4px;
+
+    }
+
+    .daily-bar-labels {
+
+      display: flex;
+
+      justify-content: space-between;
+
+      font-size: 0.65rem;
+
+      color: var(--text-dim);
+
+      margin-bottom: 6px;
+
+      font-family: 'JetBrains Mono', monospace;
+
+    }
+
+    .daily-bar {
+
+      height: 10px;
+
+      background: var(--surface2);
+
+      border-radius: 100px;
+
+      overflow: hidden;
+
+      position: relative;
+
+    }
+
+    .daily-bar-fill {
+
+      height: 100%;
+
+      border-radius: 100px;
+
+      background: linear-gradient(90deg, var(--accent), var(--prestige));
+
+      transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+      position: relative;
+
+      min-width: 0;
+
+    }
+
+    .daily-bar-fill.complete {
+
+      background: linear-gradient(90deg, var(--win), #34d399);
+
+    }
+
+    .daily-bar-fill::after {
+
+      content: '';
+
+      position: absolute;
+
+      right: 0;
+
+      top: 0;
+
+      width: 24px;
+
+      height: 100%;
+
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25));
+
+      border-radius: 100px;
+
+    }
+
+    .daily-target-info {
+
+      margin-top: 10px;
+
+      font-size: 0.7rem;
+
+      color: var(--text-dim);
+
+      line-height: 1.6;
+
+    }
+
+    .daily-complete-msg {
+
+      display: none;
+
+      margin-top: 12px;
+
+      padding: 10px 14px;
+
+      background: rgba(34,197,94,0.1);
+
+      border: 1px solid rgba(34,197,94,0.25);
+
+      border-radius: 10px;
+
+      font-size: 0.8rem;
+
+      font-weight: 600;
+
+      color: var(--win);
+
+    }
+
+    .daily-complete-msg.show { display: block; }
+
+
+
+    /* ── Report card hidden by default ── */
+
+    .report-section.hidden {
+
+      display: none;
+
+    }
+
+
+    /* Calendar */
+    .calendar-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+    .calendar-nav button { background:var(--card); border:1px solid var(--border); color:var(--text); width:34px; height:34px; border-radius:50%; cursor:pointer; font-size:1rem; display:flex; align-items:center; justify-content:center; transition:background .15s; }
+    .calendar-nav button:hover { background:var(--primary); color:#fff; }
+    .calendar-month-label { font-size:1rem; font-weight:700; letter-spacing:.5px; }
+    .calendar-weekdays { display:grid; grid-template-columns:repeat(7,1fr); text-align:center; font-size:.62rem; color:var(--text-dim); margin-bottom:6px; font-weight:600; text-transform:uppercase; }
+    .calendar-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
+    .calendar-day { aspect-ratio:1; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:.75rem; font-weight:600; background:var(--bg); border:1px solid transparent; position:relative; transition:all .15s; cursor:pointer; min-height:36px; }
+    .calendar-day.empty { background:transparent; border:none; cursor:default; }
+    .calendar-day.today { border-color:var(--primary); box-shadow:0 0 0 1px var(--primary); }
+    .calendar-day.logged { background:rgba(124,92,252,.12); border-color:rgba(124,92,252,.3); }
+    .calendar-day.logged.has-wins { background:rgba(34,197,94,.12); border-color:rgba(34,197,94,.3); }
+    .calendar-day.logged.has-losses { background:rgba(239,68,68,.12); border-color:rgba(239,68,68,.3); }
+    .calendar-day.logged.has-wins.has-losses { background:rgba(234,179,8,.12); border-color:rgba(234,179,8,.3); }
+    .calendar-day-num { font-size:.72rem; }
+    .calendar-day-blocks { font-size:.52rem; color:var(--text-dim); margin-top:1px; }
+    .calendar-day.logged .calendar-day-blocks { color:var(--primary); font-weight:700; }
+    .calendar-legend { display:flex; gap:14px; justify-content:center; margin-top:14px; flex-wrap:wrap; }
+    .calendar-legend-item { display:flex; align-items:center; gap:5px; font-size:.62rem; color:var(--text-dim); }
+    .legend-dot { width:10px; height:10px; border-radius:3px; }
+    .legend-dot.logged { background:rgba(124,92,252,.35); }
+    .legend-dot.wins { background:rgba(34,197,94,.35); }
+    .legend-dot.losses { background:rgba(239,68,68,.35); }
+    .legend-dot.mixed { background:rgba(234,179,8,.35); }
+    .calendar-day-tooltip { display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--card); border:1px solid var(--border); border-radius:8px; padding:8px 12px; font-size:.65rem; white-space:nowrap; z-index:20; box-shadow:0 4px 16px rgba(0,0,0,.3); pointer-events:none; }
+    .calendar-day.logged:hover .calendar-day-tooltip { display:block; }
+
+    /* Day Action Buttons */
+    .day-actions { display:flex; gap:10px; margin-top:16px; }
+    .day-actions .btn { flex:1; font-size:.78rem; padding:10px 0; }
+    .btn-log { background:var(--primary); color:#fff; border:none; border-radius:10px; cursor:pointer; font-weight:600; transition:all .15s; }
+    .btn-log:hover { background:#6b4fdb; transform:translateY(-1px); }
+    .btn-log:disabled { opacity:.4; cursor:not-allowed; transform:none; }
+    .btn-delete { background:transparent; color:var(--loss); border:1.5px solid var(--loss); border-radius:10px; cursor:pointer; font-weight:600; transition:all .15s; }
+    .btn-delete:hover { background:rgba(239,68,68,.1); transform:translateY(-1px); }
+    .btn-delete:disabled { opacity:.4; cursor:not-allowed; transform:none; }
+
+    /* Two-column layout for wider screens */
+    .two-col { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    @media (max-width:700px) { .two-col { grid-template-columns:1fr; } }
+
+  </style>
+
+</head>
+
+<body>
+
+
+
+  <button class="sound-toggle" id="soundToggle" title="Toggle sound">🔔</button>
+
+
+
+  <!-- Setup Modal -->
+
+  <div class="modal-overlay" id="setupModal" style="display:none;">
+
+    <div class="modal">
+
+      <h2>🚀 Initialize Focus ELO</h2>
+
+      <p>Set your starting ELO rating. Choose any number (even negative for challenge mode), or start at 0.</p>
+
+      <input type="number" id="startingElo" value="0" />
+
+      <div class="modal-buttons">
+
+        <button class="btn btn-ghost" onclick="startWithDefault()">Default (0)</button>
+
+        <button class="btn btn-primary" onclick="startWithCustom()">Start</button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- Confirm Reset All Data Modal -->
+
+  <div class="modal-overlay" id="resetModal" style="display:none;">
+
+    <div class="modal">
+
+      <h2>⚠️ Reset All Data?</h2>
+
+      <p>This will permanently erase <strong>all</strong> your ELO, history, calendar, and stats. This cannot be undone.</p>
+
+      <p style="font-size:0.85rem; color:var(--text-dim); margin-top:8px;">You can export your data first as a backup.</p>
+
+      <label style="display:block; margin:12px 0 4px; font-size:0.85rem; color:var(--text-dim);">New Starting ELO</label>
+
+      <input type="number" id="resetStartingElo" value="0" style="width:100%;" />
+
+      <div class="modal-buttons" style="gap:8px;">
+
+        <button class="btn btn-ghost" onclick="closeResetModal()">Cancel</button>
+
+        <button class="btn btn-primary" onclick="exportData()" style="font-size:0.8rem;">📥 Export Data</button>
+
+        <button class="btn btn-loss" onclick="confirmResetAll()">Reset Everything</button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- Reset Day Modal -->
+
+  <div class="modal-overlay" id="resetDayModal" style="display:none;">
+
+    <div class="modal">
+
+      <h2>🔄 Reset Day</h2>
+
+      <p>This clears today's blocks and lets you set a new starting ELO. Previous days are kept.</p>
+
+      <label style="display:block; margin:12px 0 4px; font-size:0.85rem; color:var(--text-dim);">New Starting ELO</label>
+
+      <input type="number" id="resetDayElo" value="0" style="width:100%;" />
+
+      <div class="modal-buttons">
+
+        <button class="btn btn-ghost" onclick="closeResetDayModal()">Cancel</button>
+
+        <button class="btn btn-primary" onclick="confirmResetDay()">Reset Day</button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+    </div>
+
+  </div>
+
+
+
+
+
+  <!-- Edit Block Modal -->
+  <div class="modal-overlay" id="editBlockModal" style="display:none;">
+    <div class="modal">
+      <h2>✏️ Edit Block #<span id="editBlockNum"></span></h2>
+      <p style="font-size:0.8rem;color:var(--text-dim);">Change the result for this block.</p>
+      <div class="edit-result-options" id="editResultOptions">
+        <button class="btn btn-win" onclick="selectEditResult('win')">🏆 Win</button>
+        <button class="btn btn-draw" onclick="selectEditResult('draw')">🤝 Draw</button>
+        <button class="btn btn-loss" onclick="selectEditResult('loss')">💀 Loss</button>
+      </div>
+      <div class="honesty-check">
+        <label>
+          <input type="checkbox" id="editHonestyCheck" onchange="updateEditConfirmBtn()">
+          I'm correcting a genuine mistake — not inflating my results.
+        </label>
+      </div>
+      <div class="modal-buttons">
+        <button class="btn btn-ghost" onclick="closeEditBlockModal()">Cancel</button>
+        <button class="btn btn-primary" id="editConfirmBtn" onclick="confirmEditBlock()" disabled>Save Change</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Block Modal -->
+  <div class="modal-overlay" id="deleteBlockModal" style="display:none;">
+    <div class="modal">
+      <h2>🗑️ Delete Block #<span id="deleteBlockNum"></span>?</h2>
+      <p style="font-size:0.8rem;color:var(--text-dim);">This will remove this block and recalculate your ELO from that point forward.</p>
+      <div class="honesty-check">
+        <label>
+          <input type="checkbox" id="deleteHonestyCheck" onchange="updateDeleteConfirmBtn()">
+          I'm removing this because of a genuine error — not to cheat my progress.
+        </label>
+      </div>
+      <div class="modal-buttons">
+        <button class="btn btn-ghost" onclick="closeDeleteBlockModal()">Cancel</button>
+        <button class="btn btn-danger" id="deleteConfirmBtn" onclick="confirmDeleteBlock()" disabled>Delete Block</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Day Detail Modal -->
+  <div class="modal-overlay" id="dayDetailModal" style="display:none;" onclick="if(event.target===this)closeDayDetail()">
+    <div class="modal" style="max-width:420px;">
+      <h2 id="dayDetailTitle"></h2>
+      <div id="dayDetailContent"></div>
+      <div class="modal-buttons" style="margin-top:16px;">
+        <button class="btn btn-ghost" onclick="closeDayDetail()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+
+  <div class="toast" id="toast"></div>
+
+
+
+
+
+  <!-- Confetti Container -->
+
+  <div class="confetti-container" id="confetti"></div>
+
+
+
+  <div class="app" id="appContent" style="display:none;">
+
+
+
+    <!-- Header -->
+
+    <div class="header">
+
+      <h1>Focus ELO</h1>
+
+      <p>25-Minute Study Blocks</p>
+
+    </div>
+
+
+
+    <!-- Prestige Banner -->
+
+    <div class="prestige-banner" id="prestigeBanner">
+
+      <div class="prestige-icon">🏆✨</div>
+
+      <div class="prestige-text">PRESTIGE UNLOCKED</div>
+
+      <div class="prestige-sub">ELO ≥ 300 — You've reached the summit. Incredible.</div>
+
+    </div>
+
+
+
+    <div class="two-col">
+    <!-- ELO Display -->
+
+    <div class="card elo-display" id="eloCard">
+
+      <div class="tier-badge" id="tierBadge">
+
+        <span class="tier-dot"></span>
+
+        <span id="tierName">BRONZE</span>
+
+      </div>
+
+      <div class="elo-number" id="eloNumber">0</div>
+
+      <div class="elo-label">ELO RATING</div>
+
+      <div class="elo-change" id="eloChange"></div>
+
+
+
+      <!-- Tier progress -->
+
+      <div class="tier-progress">
+
+        <div class="tier-progress-labels">
+
+          <span id="tierFloor">0</span>
+
+          <span id="tierCeil">75</span>
+
+        </div>
+
+        <div class="tier-progress-bar">
+
+          <div class="tier-progress-fill" id="tierProgressFill" style="width:0%;"></div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+
+    <!-- Daily Progress -->
+
+    <div class="card daily-progress" id="dailyCard">
+
+      <div class="daily-header">
+
+        <span class="card-title" style="margin-bottom:0;">Daily Progress</span>
+
+        <span class="daily-date" id="dailyDate"></span>
+
+      </div>
+
+      <div class="daily-stats-row">
+
+        <div class="daily-stat">
+
+          <div class="daily-stat-value" id="dailyBlocks">0</div>
+
+          <div class="daily-stat-label">Blocks</div>
+
+        </div>
+
+        <div class="daily-stat">
+
+          <div class="daily-stat-value" id="dailyStudyTime">0m</div>
+
+          <div class="daily-stat-label">Study Time</div>
+
+        </div>
+
+        <div class="daily-stat">
+
+          <div class="daily-stat-value" id="dailyTargetHrs">6h</div>
+
+          <div class="daily-stat-label">Target</div>
+
+        </div>
+
+      </div>
+
+      <div class="daily-bar-container">
+
+        <div class="daily-bar-labels">
+
+          <span id="dailyBarDone">0h 0m</span>
+
+          <span id="dailyBarGoal">6h 0m</span>
+
+        </div>
+
+        <div class="daily-bar">
+
+          <div class="daily-bar-fill" id="dailyBarFill" style="width:0%"></div>
+
+        </div>
+
+      </div>
+
+      <div class="daily-target-info" id="dailyTargetInfo"></div>
+
+      <div class="daily-complete-msg" id="dailyCompleteMsg">🎉 Daily target reached! You're a machine.</div>
+
+      <div style="margin-top:12px; text-align:center;">
+        <button class="btn btn-log" id="btnLogDayMain" onclick="logToday()" style="font-size:0.72rem; padding:8px 18px;">📅 Log Today</button>
+      </div>
+
+    </div>
+    </div><!-- /two-col -->
+
+    <!-- Timer -->
+
+    <div class="card timer-section">
+
+      <div class="card-title">Timer</div>
+
+      <div class="timer-ring-container">
+
+        <svg class="timer-ring" viewBox="0 0 200 200">
+
+          <circle class="timer-ring-bg" cx="100" cy="100" r="90" />
+
+          <circle class="timer-ring-progress" id="timerProgress" cx="100" cy="100" r="90" />
+
+        </svg>
+
+        <div class="timer-text">
+
+          <div class="timer-time" id="timerDisplay">25:00</div>
+
+          <div class="timer-phase" id="timerPhase">Study Block</div>
+
+        </div>
+
+      </div>
+
+      <div class="timer-controls">
+
+        <button class="btn btn-primary" id="btnStart" onclick="startTimer()">▶ Start</button>
+
+        <button class="btn btn-ghost" id="btnPause" onclick="pauseTimer()" disabled>⏸ Pause</button>
+
+        <button class="btn btn-ghost" id="btnSkip" onclick="skipTimer()">⏭ Skip</button>
+
+      </div>
+
+      <div class="undo-banner" id="undoBanner">
+        <span class="undo-msg" id="undoMsg"></span>
+        <button class="undo-btn" onclick="undoLastBlock()">Undo</button>
+      </div>
+
+    </div>
+
+
+
+    <!-- Report (hidden until timer ends or skip) -->
+
+    <div class="card report-section hidden" id="reportCard">
+
+      <div class="card-title">Report Block Result</div>
+
+      <p style="font-size:0.78rem;color:var(--text-dim);margin-bottom:14px;">
+
+        Be honest — how focused were you?
+
+      </p>
+
+      <div class="report-buttons">
+
+        <button class="btn btn-win" onclick="reportResult('win')">🏆 Win</button>
+
+        <button class="btn btn-draw" onclick="reportResult('draw')">🤝 Draw</button>
+
+        <button class="btn btn-loss" onclick="reportResult('loss')">💀 Loss</button>
+
+      </div>
+
+      <p style="font-size:0.65rem;color:var(--text-dim);margin-top:12px;line-height:1.5;">
+
+        <strong>Win:</strong> ≥25 min focused &nbsp;|&nbsp; <strong>Draw:</strong> 12.5–24 min &nbsp;|&nbsp; <strong>Loss:</strong> &lt;12.5 min
+
+      </p>
+
+    </div>
+
+
+
+    <!-- Tabs: Stats / Tiers / History -->
+
+    <div class="tab-bar">
+
+      <button class="tab-btn active" onclick="switchTab('stats', this)">Stats</button>
+
+      <button class="tab-btn" onclick="switchTab('tiers', this)">Tiers</button>
+
+      <button class="tab-btn" onclick="switchTab('history', this)">History</button>
+      <button class="tab-btn" onclick="switchTab('calendar', this)">Calendar</button>
+
+    </div>
+
+
+
+    <!-- Stats Panel -->
+
+    <div class="tab-panel active" id="panel-stats">
+
+      <div class="card">
+
+        <div class="card-title">Session Stats</div>
+
+        <div class="stats-grid">
+
+          <div class="stat-item">
+
+            <div class="stat-value" id="statBlocks">0</div>
+
+            <div class="stat-label">Blocks</div>
+
+          </div>
+
+          <div class="stat-item">
+
+            <div class="stat-value win-color" id="statWins">0</div>
+
+            <div class="stat-label">Wins</div>
+
+          </div>
+
+          <div class="stat-item">
+
+            <div class="stat-value draw-color" id="statDraws">0</div>
+
+            <div class="stat-label">Draws</div>
+
+          </div>
+
+          <div class="stat-item">
+
+            <div class="stat-value loss-color" id="statLosses">0</div>
+
+            <div class="stat-label">Losses</div>
+
+          </div>
+
+          <div class="stat-item">
+
+            <div class="stat-value" id="statPeak" style="color:var(--gold);">0</div>
+
+            <div class="stat-label">Peak ELO</div>
+
+          </div>
+
+          <div class="stat-item">
+
+            <div class="stat-value" id="statWinRate">—</div>
+
+            <div class="stat-label">Win Rate</div>
+
+          </div>
+
+        </div>
+
+        <div class="streak-bar" id="streakBar">
+
+          <span class="streak-icon" id="streakIcon">➖</span>
+
+          <span class="streak-text" id="streakText">No streak yet</span>
+
+        </div>
+
+      </div>
+
+
+
+      <!-- Current tier scoring -->
+
+      <div class="card">
+
+        <div class="card-title" id="scoringTitle">Current Tier Scoring</div>
+
+        <table class="scoring-table" id="scoringTable"></table>
+
+      </div>
+
+    </div>
+
+
+
+    <!-- Tiers Panel -->
+
+    <div class="tab-panel" id="panel-tiers">
+
+      <div class="card">
+
+        <div class="card-title">Tier Ladder</div>
+
+        <div class="tier-map" id="tierMap"></div>
+
+      </div>
+
+    </div>
+
+
+
+    <!-- History Panel -->
+
+    <div class="tab-panel" id="panel-history">
+
+      <div class="card">
+
+        <div class="card-title">Block History</div>
+
+        <div class="history-list" id="historyList">
+
+          <div class="empty-history">
+
+            <div class="empty-icon">📭</div>
+
+            No blocks recorded yet. Start your first session!
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Calendar Panel -->
+    <div class="tab-panel" id="panel-calendar">
+      <div class="card">
+        <div class="card-title">Study Calendar</div>
+        <div class="calendar-nav">
+          <button onclick="navigateCalendar(-1)" title="Previous month">◀</button>
+          <span class="calendar-month-label" id="calMonthLabel">January 2025</span>
+          <button onclick="navigateCalendar(1)" title="Next month">▶</button>
+        </div>
+        <div class="calendar-weekdays">
+          <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+        </div>
+        <div class="calendar-grid" id="calendarGrid"></div>
+        <div class="calendar-legend">
+          <div class="calendar-legend-item"><div class="legend-dot wins"></div>Mostly Wins</div>
+          <div class="calendar-legend-item"><div class="legend-dot losses"></div>Mostly Losses</div>
+          <div class="calendar-legend-item"><div class="legend-dot mixed"></div>Mixed</div>
+          <div class="calendar-legend-item"><div class="legend-dot logged"></div>Logged (no blocks)</div>
+        </div>
+        <div class="day-actions">
+          <button class="btn btn-log" id="btnLogDay" onclick="logToday()">&#x1F4C5; Log Today</button>
+          <button class="btn btn-delete" id="btnDeleteDay" onclick="deleteTodayData()">&#x1F5D1;&#xFE0F; Delete Today's Data</button>
+        </div>
+      </div>
+    </div>
+
+
+
+    <!-- Rules (collapsible) -->
+
+    <div class="card">
+
+      <div class="rules-toggle" id="rulesToggle" onclick="toggleRules()">
+
+        <span class="card-title" style="margin-bottom:0;">Rules & Info</span>
+
+        <span class="chevron">▼</span>
+
+      </div>
+
+      <div class="rules-content" id="rulesContent">
+
+        <div style="padding-top:12px;">
+
+          <div class="rule-item"><span class="rule-icon">📋</span> Report <strong>win / draw / loss</strong> honestly after each block.</div>
+
+          <div class="rule-item"><span class="rule-icon">🚫</span> No retroactive changes to results.</div>
+
+          <div class="rule-item"><span class="rule-icon">⏰</span> Missed block = automatic loss.</div>
+
+          <div class="rule-item"><span class="rule-icon">🔗</span> No stacking blocks — one at a time.</div>
+
+          <div class="rule-item"><span class="rule-icon">☕</span> Breaks are strictly 5 minutes.</div>
+
+          <div class="rule-item"><span class="rule-icon">⬆️</span> Promotion is instant when you cross a threshold.</div>
+
+          <div class="rule-item"><span class="rule-icon">🎁</span> ELO ≥ 300 → Prestige unlocked!</div>
+
+          <div class="rule-item"><span class="rule-icon">📉</span> When unsure, round down (be conservative).</div>
+
+        </div>
+
+        <div class="reset-row" style="margin-top:24px; padding-top:16px; border-top:1px solid var(--border);">
+          <button class="reset-link" onclick="showResetModal()">Reset all data</button>
+        </div>
+
+      </div>
+
+    </div>
+
+
+
+    <div class="reset-row">
+
+      <button class="reset-link" onclick="showResetDayModal()">Reset day</button>
+
+    </div>
+
+
+
+  </div>
+
+
+
+  <script>
+
+    // ─── State ───
+
+    const TIERS = [
+
+      { name: 'Trenches', icon: '🕳️', floor: -Infinity, ceil: 0,   color: '#6b7280', class: 'tier-trenches', win: 25, draw: 25, loss: 0 },
+
+      { name: 'Bronze',   icon: '🟫', floor: 0,         ceil: 75,  color: '#cd7f32', class: 'tier-bronze',   win: 25, draw: 10, loss: -12.5 },
+
+      { name: 'Silver',   icon: '⚪', floor: 75,        ceil: 150, color: '#c0c0c0', class: 'tier-silver',   win: 25, draw: 0,  loss: -15 },
+
+      { name: 'Gold',     icon: '🟨', floor: 150,       ceil: 225, color: '#ffd700', class: 'tier-gold',     win: 25, draw: 0,  loss: -25 },
+
+      { name: 'Starlight',icon: '🌌', floor: 225,       ceil: 300, color: '#a78bfa', class: 'tier-starlight',win: 25, draw: -10,loss: -25 },
+
+      { name: 'Prestige', icon: '✨', floor: 300,       ceil: Infinity, color: '#ec4899', class: 'tier-prestige',win: 25, draw: -10,loss: -25 },
+
+    ];
+
+
+
+    const STUDY_SECONDS = 25 * 60;
+
+    const BREAK_SECONDS = 5 * 60;
+
+    const CIRCUMFERENCE = 2 * Math.PI * 90; // ~565.48
+
+
+
+    let state = loadState();
+
+    let timerInterval = null;
+
+    let timerSeconds = STUDY_SECONDS;
+
+    let timerRunning = false;
+
+    let timerPhase = 'study'; // 'study' | 'break'
+
+    let soundEnabled = true;
+
+
+
+    // ─── Audio helpers (web audio API beeps) ───
+
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+
+    let audioCtx = null;
+
+    function getAudioCtx() {
+
+      if (!audioCtx) audioCtx = new AudioCtx();
+
+      return audioCtx;
+
+    }
+
+    function playTone(freq, duration, type = 'sine') {
+
+      if (!soundEnabled) return;
+
+      try {
+
+        const ctx = getAudioCtx();
+
+        const osc = ctx.createOscillator();
+
+        const gain = ctx.createGain();
+
+        osc.type = type;
+
+        osc.frequency.value = freq;
+
+        gain.gain.setValueAtTime(0.15, ctx.currentTime);
+
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+
+        osc.connect(gain);
+
+        gain.connect(ctx.destination);
+
+        osc.start(ctx.currentTime);
+
+        osc.stop(ctx.currentTime + duration);
+
+      } catch(e) {}
+
+    }
+
+    function playWinSound()  { playTone(523, 0.15); setTimeout(() => playTone(659, 0.15), 150); setTimeout(() => playTone(784, 0.3), 300); }
+
+    function playDrawSound() { playTone(440, 0.15); setTimeout(() => playTone(440, 0.2), 200); }
+
+    function playLossSound() { playTone(330, 0.3, 'triangle'); setTimeout(() => playTone(262, 0.4, 'triangle'), 300); }
+
+    function playTimerEnd()  { for (let i = 0; i < 3; i++) setTimeout(() => playTone(880, 0.12), i * 200); }
+
+    function playPromotionSound() { [523,659,784,1047].forEach((f,i) => setTimeout(() => playTone(f, 0.2), i * 150)); }
+
+
+
+    // ─── State persistence ───
+
+    function loadState() {
+
+      try {
+
+        const s = JSON.parse(localStorage.getItem('focusElo'));
+
+        if (s && typeof s.elo === 'number') return s;
+
+      } catch(e) {}
+
+      return null;
+
+    }
+
+    function saveState() {
+
+      localStorage.setItem('focusElo', JSON.stringify(state));
+
+    }
+
+
+
+    // ─── Tier helpers ───
+
+    function getTier(elo) {
+
+      for (let i = TIERS.length - 1; i >= 0; i--) {
+
+        if (elo >= TIERS[i].floor) return TIERS[i];
+
+      }
+
+      return TIERS[0];
+
+    }
+
+    function getTierIndex(elo) {
+
+      for (let i = TIERS.length - 1; i >= 0; i--) {
+
+        if (elo >= TIERS[i].floor) return i;
+
+      }
+
+      return 0;
+
+    }
+
+
+
+    function getEloChange(tier, result) {
+
+      if (result === 'win')  return tier.win;
+
+      if (result === 'draw') return tier.draw;
+
+      return tier.loss;
+
+    }
+
+
+
+    // ─── Init / Setup ───
+
+    function init() {
+
+      if (!state) {
+
+        document.getElementById('setupModal').style.display = 'flex';
+
+      } else {
+
+        showApp();
+
+      }
+
+    }
+
+    function startWithDefault() {
+
+      state = { elo: 0, peak: 0, history: [], streak: 0, streakType: null, startingElo: 0, loggedDays: {} };
+
+      saveState();
+
+      document.getElementById('setupModal').style.display = 'none';
+
+      showApp();
+
+    }
+
+    function startWithCustom() {
+
+      const v = parseInt(document.getElementById('startingElo').value) || 0;
+
+      state = { elo: v, peak: v, history: [], streak: 0, streakType: null, startingElo: v, loggedDays: {} };
+
+      saveState();
+
+      document.getElementById('setupModal').style.display = 'none';
+
+      showApp();
+
+    }
+
+
+
+    function showApp() {
+
+      document.getElementById('appContent').style.display = 'block';
+
+      renderAll();
+
+    }
+
+
+
+    // ─── Render ───
+
+    function renderAll() {
+
+      renderElo();
+
+      renderStats();
+
+      renderTierMap();
+
+      renderScoringTable();
+
+      renderHistory();
+
+      renderPrestige();
+
+      renderDailyProgress();
+
+      renderCalendar();
+
+    }
+
+
+
+    function renderElo() {
+
+      const tier = getTier(state.elo);
+
+      const card = document.getElementById('eloCard');
+
+
+
+      // Remove all tier classes
+
+      TIERS.forEach(t => card.classList.remove(t.class));
+
+      card.classList.add(tier.class);
+
+
+
+      document.getElementById('tierName').textContent = tier.name.toUpperCase();
+
+      document.getElementById('eloNumber').textContent = state.elo % 1 === 0 ? state.elo : state.elo.toFixed(1);
+
+
+
+      // Progress bar
+
+      const floor = tier.floor === -Infinity ? Math.min(state.elo, -50) : tier.floor;
+
+      const ceil  = tier.ceil === Infinity ? Math.max(state.elo + 50, 350) : tier.ceil;
+
+      const range = ceil - floor;
+
+      const pct   = Math.max(0, Math.min(100, ((state.elo - floor) / range) * 100));
+
+
+
+      document.getElementById('tierFloor').textContent = floor === -Infinity ? '−∞' : floor;
+
+      document.getElementById('tierCeil').textContent  = ceil === Infinity ? '∞' : ceil;
+
+
+
+      const fill = document.getElementById('tierProgressFill');
+
+      fill.style.width = pct + '%';
+
+      fill.style.background = `linear-gradient(90deg, ${tier.color}88, ${tier.color})`;
+
+    }
+
+
+
+    function flashEloChange(delta) {
+
+      const el = document.getElementById('eloChange');
+
+      if (delta > 0) {
+
+        el.textContent = `+${delta % 1 === 0 ? delta : delta.toFixed(1)}`;
+
+        el.className = 'elo-change show positive';
+
+      } else if (delta < 0) {
+
+        el.textContent = `${delta % 1 === 0 ? delta : delta.toFixed(1)}`;
+
+        el.className = 'elo-change show negative';
+
+      } else {
+
+        el.textContent = `±0`;
+
+        el.className = 'elo-change show neutral';
+
+      }
+
+      setTimeout(() => el.classList.remove('show'), 2500);
+
+    }
+
+
+
+    function renderStats() {
+
+      const h = state.history;
+
+      const wins   = h.filter(x => x.result === 'win').length;
+
+      const draws  = h.filter(x => x.result === 'draw').length;
+
+      const losses = h.filter(x => x.result === 'loss').length;
+
+      const total  = h.length;
+
+
+
+      document.getElementById('statBlocks').textContent  = total;
+
+      document.getElementById('statWins').textContent    = wins;
+
+      document.getElementById('statDraws').textContent   = draws;
+
+      document.getElementById('statLosses').textContent  = losses;
+
+      document.getElementById('statPeak').textContent    = state.peak % 1 === 0 ? state.peak : state.peak.toFixed(1);
+
+      document.getElementById('statWinRate').textContent  = total > 0 ? Math.round((wins / total) * 100) + '%' : '—';
+
+
+
+      // Streak
+
+      const sIcon = document.getElementById('streakIcon');
+
+      const sText = document.getElementById('streakText');
+
+      if (state.streak > 0 && state.streakType === 'win') {
+
+        sIcon.textContent = '🔥';
+
+        sText.textContent = `${state.streak} win streak`;
+
+        sText.style.color = 'var(--win)';
+
+      } else if (state.streak > 0 && state.streakType === 'loss') {
+
+        sIcon.textContent = '💀';
+
+        sText.textContent = `${state.streak} loss streak`;
+
+        sText.style.color = 'var(--loss)';
+
+      } else {
+
+        sIcon.textContent = '➖';
+
+        sText.textContent = 'No streak';
+
+        sText.style.color = 'var(--text-dim)';
+
+      }
+
+    }
+
+
+
+    function renderTierMap() {
+
+      const currentIdx = getTierIndex(state.elo);
+
+      const container = document.getElementById('tierMap');
+
+      container.innerHTML = '';
+
+      // Show from top to bottom (Prestige → Trenches)
+
+      for (let i = TIERS.length - 1; i >= 0; i--) {
+
+        const t = TIERS[i];
+
+        const isActive = i === currentIdx;
+
+        const floorStr = t.floor === -Infinity ? '−∞' : t.floor;
+
+        const ceilStr  = t.ceil === Infinity ? '∞' : t.ceil;
+
+        container.innerHTML += `
+
+          <div class="tier-row ${isActive ? 'active' : ''}">
+
+            <span class="tier-icon">${t.icon}</span>
+
+            <span class="tier-name" style="color:${t.color}">${t.name}</span>
+
+            <span class="tier-range">${floorStr} – ${ceilStr}</span>
+
+            <span class="tier-indicator"></span>
+
+          </div>`;
+
+      }
+
+    }
+
+
+
+    function renderScoringTable() {
+
+      const tier = getTier(state.elo);
+
+      document.getElementById('scoringTitle').textContent = `${tier.name} — Scoring`;
+
+      const table = document.getElementById('scoringTable');
+
+      const fmt = v => {
+
+        const s = v > 0 ? `+${v % 1 === 0 ? v : v.toFixed(1)}` : v === 0 ? '0' : `${v % 1 === 0 ? v : v.toFixed(1)}`;
+
+        const cls = v > 0 ? 'score-positive' : v < 0 ? 'score-negative' : 'score-neutral';
+
+        return `<span class="${cls}">${s}</span>`;
+
+      };
+
+      table.innerHTML = `
+
+        <thead><tr><th>Result</th><th>ELO Change</th></tr></thead>
+
+        <tbody>
+
+          <tr><td>🏆 Win</td><td>${fmt(tier.win)}</td></tr>
+
+          <tr><td>🤝 Draw</td><td>${fmt(tier.draw)}</td></tr>
+
+          <tr><td>💀 Loss</td><td>${fmt(tier.loss)}</td></tr>
+
+        </tbody>`;
+
+    }
+
+
+
+    function renderHistory() {
+      const container = document.getElementById('historyList');
+      if (state.history.length === 0) {
+        container.innerHTML = `<div class="empty-history"><div class="empty-icon">📭</div>No blocks recorded yet. Start your first session!</div>`;
+        return;
+      }
+      container.innerHTML = '';
+      const items = [...state.history].reverse();
+      items.forEach((h, idx) => {
+        const blockNum = state.history.length - idx;
+        const realIdx = state.history.length - 1 - idx;
+        const icon = h.result === 'win' ? 'W' : h.result === 'draw' ? 'D' : 'L';
+        const deltaSign = h.delta > 0 ? '+' : '';
+        const deltaClass = h.delta > 0 ? 'positive' : h.delta < 0 ? 'negative' : 'neutral';
+        const time = new Date(h.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const date = new Date(h.time).toLocaleDateString([], { month: 'short', day: 'numeric' });
+        container.innerHTML += `
+          <div class="history-item">
+            <div class="history-badge ${h.result}">${icon}</div>
+            <div class="history-info">
+              <div class="history-block">Block #${blockNum}</div>
+              <div class="history-time">${date} · ${time} · ${h.tier}</div>
+            </div>
+            <div class="history-elo">
+              <div class="elo-after">${h.eloAfter % 1 === 0 ? h.eloAfter : h.eloAfter.toFixed(1)}</div>
+              <div class="elo-delta ${deltaClass}">${deltaSign}${h.delta % 1 === 0 ? h.delta : h.delta.toFixed(1)}</div>
+            </div>
+            <div class="history-actions">
+              <button class="btn-edit" onclick="openEditBlockModal(${realIdx})" title="Edit">✏️</button>
+              <button class="btn-del" onclick="openDeleteBlockModal(${realIdx})" title="Delete">🗑</button>
+            </div>
+          </div>`;
+      });
+    }
+
+    function renderPrestige() {
+
+      const banner = document.getElementById('prestigeBanner');
+
+      if (state.elo >= 300) {
+
+        banner.classList.add('show');
+
+      } else {
+
+        banner.classList.remove('show');
+
+      }
+
+    }
+
+
+
+    // ─── Report ───
+
+    function reportResult(result) {
+
+      // Clear previous undo, capture new snapshot
+      hideUndoBanner();
+      undoSnapshot = captureUndoSnapshot();
+
+      const tier = getTier(state.elo);
+
+      const delta = getEloChange(tier, result);
+
+      const oldTierIdx = getTierIndex(state.elo);
+
+
+
+      state.elo += delta;
+
+      if (state.elo > state.peak) state.peak = state.elo;
+
+
+
+      // Streak tracking
+
+      if (result === 'win') {
+
+        state.streak = state.streakType === 'win' ? state.streak + 1 : 1;
+
+        state.streakType = 'win';
+
+      } else if (result === 'loss') {
+
+        state.streak = state.streakType === 'loss' ? state.streak + 1 : 1;
+
+        state.streakType = 'loss';
+
+      } else {
+
+        state.streak = 0;
+
+        state.streakType = null;
+
+      }
+
+
+
+      state.history.push({
+
+        result,
+
+        delta,
+
+        eloAfter: state.elo,
+
+        tier: tier.name,
+
+        time: Date.now()
+
+      });
+
+
+
+      saveState();
+
+
+
+      // Sound
+
+      if (result === 'win') playWinSound();
+
+      else if (result === 'draw') playDrawSound();
+
+      else playLossSound();
+
+
+
+      // Tier change notification
+
+      const newTierIdx = getTierIndex(state.elo);
+
+      if (newTierIdx > oldTierIdx) {
+
+        const newTier = TIERS[newTierIdx];
+
+        setTimeout(() => {
+
+          showToast(`⬆️ Promoted to ${newTier.icon} ${newTier.name}!`, 'promotion');
+
+          playPromotionSound();
+
+          if (newTierIdx >= 5) launchConfetti();
+
+        }, 400);
+
+      } else if (newTierIdx < oldTierIdx) {
+
+        const newTier = TIERS[newTierIdx];
+
+        setTimeout(() => showToast(`⬇️ Demoted to ${newTier.icon} ${newTier.name}`, 'demotion'), 400);
+
+      }
+
+
+
+      // Prestige confetti
+
+      if (state.elo >= 300 && state.elo - delta < 300) {
+
+        setTimeout(() => launchConfetti(), 600);
+
+      }
+
+
+
+      flashEloChange(delta);
+
+      renderAll();
+
+      // Show undo banner
+      showUndoBanner(result, delta);
+
+      // Auto-start break
+      startBreak();
+
+    }
+
+
+
+    // ─── Timer ───
+
+    function startTimer() {
+
+      if (timerRunning) return;
+
+      timerRunning = true;
+
+      document.getElementById('btnStart').disabled = true;
+
+      document.getElementById('btnPause').disabled = false;
+
+
+
+      timerInterval = setInterval(() => {
+
+        timerSeconds--;
+
+        if (timerSeconds <= 0) {
+
+          clearInterval(timerInterval);
+
+          timerRunning = false;
+
+          timerSeconds = 0;
+
+          updateTimerDisplay();
+
+          playTimerEnd();
+
+
+
+          if (timerPhase === 'study') {
+
+            // Study done → prompt report
+
+            document.getElementById('timerPhase').textContent = 'Time\'s up! Report below';
+
+            document.getElementById('btnStart').disabled = true;
+
+            document.getElementById('btnPause').disabled = true;
+
+            showReportCard();
+
+          } else {
+
+            // Break done → reset to study
+
+            resetToStudy();
+
+          }
+
+          return;
+
+        }
+
+        updateTimerDisplay();
+
+      }, 1000);
+
+    }
+
+
+
+    function pauseTimer() {
+
+      if (!timerRunning) return;
+
+      clearInterval(timerInterval);
+
+      timerRunning = false;
+
+      document.getElementById('btnStart').disabled = false;
+
+      document.getElementById('btnPause').disabled = true;
+
+    }
+
+
+
+    function skipTimer() {
+
+      clearInterval(timerInterval);
+
+      timerRunning = false;
+
+      if (timerPhase === 'study') {
+
+        timerSeconds = 0;
+
+        updateTimerDisplay();
+
+        document.getElementById('timerPhase').textContent = 'Skipped — Report below';
+
+        document.getElementById('btnStart').disabled = true;
+
+        document.getElementById('btnPause').disabled = true;
+
+        showReportCard();
+
+      } else {
+
+        resetToStudy();
+
+      }
+
+    }
+
+
+
+    function showReportCard() {
+
+      const rc = document.getElementById('reportCard');
+
+      rc.classList.remove('hidden');
+
+      rc.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    }
+
+    function hideReportCard() {
+
+      document.getElementById('reportCard').classList.add('hidden');
+
+    }
+
+
+
+    // ─── Daily Progress ───
+
+    function getTodayKey() {
+
+      const d = new Date();
+
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+
+    }
+
+    function getDailyTargetMinutes() {
+
+      const startElo = typeof state.startingElo === 'number' ? state.startingElo : 0;
+
+      const gap = Math.max(0, 300 - startElo);
+
+      const blocksNeeded = Math.ceil(gap / 25);
+
+      // Each block = 25 min study + 5 min break = 30 min total
+
+      return blocksNeeded * 30;
+
+    }
+
+    function getTodayBlocks() {
+
+      const today = getTodayKey();
+
+      return state.history.filter(h => {
+
+        const d = new Date(h.time);
+
+        const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+
+        return key === today;
+
+      });
+
+    }
+
+    function formatDuration(mins) {
+
+      const h = Math.floor(mins / 60);
+
+      const m = Math.round(mins % 60);
+
+      if (h === 0) return `${m}m`;
+
+      return m === 0 ? `${h}h` : `${h}h ${m}m`;
+
+    }
+
+    function renderDailyProgress() {
+
+      const todayBlocks = getTodayBlocks();
+
+      const blockCount = todayBlocks.length;
+
+      const studyMins = blockCount * 25;
+
+      const totalMins = blockCount * 30; // including breaks
+
+      const targetMins = getDailyTargetMinutes();
+
+      const targetHrs = targetMins / 60;
+
+
+
+      // Date display
+
+      const now = new Date();
+
+      document.getElementById('dailyDate').textContent = now.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+
+
+
+      document.getElementById('dailyBlocks').textContent = blockCount;
+
+      document.getElementById('dailyStudyTime').textContent = formatDuration(studyMins);
+
+      document.getElementById('dailyTargetHrs').textContent = targetHrs % 1 === 0 ? `${targetHrs}h` : `${targetHrs.toFixed(1)}h`;
+
+
+
+      // Bar
+
+      const pct = targetMins > 0 ? Math.min(100, (totalMins / targetMins) * 100) : 100;
+
+      document.getElementById('dailyBarDone').textContent = formatDuration(totalMins);
+
+      document.getElementById('dailyBarGoal').textContent = formatDuration(targetMins);
+
+      const fill = document.getElementById('dailyBarFill');
+
+      fill.style.width = pct + '%';
+
+      if (pct >= 100) fill.classList.add('complete');
+
+      else fill.classList.remove('complete');
+
+
+
+      // Target info
+
+      const remaining = Math.max(0, targetMins - totalMins);
+
+      const blocksLeft = Math.ceil(remaining / 30);
+
+      const info = document.getElementById('dailyTargetInfo');
+
+      if (remaining > 0) {
+
+        info.textContent = `${blocksLeft} block${blocksLeft !== 1 ? 's' : ''} remaining (${formatDuration(remaining)} incl. breaks)`;
+
+      } else {
+
+        info.textContent = 'Target complete!';
+
+      }
+
+
+
+      // Complete message
+
+      const completeMsg = document.getElementById('dailyCompleteMsg');
+
+      if (pct >= 100) completeMsg.classList.add('show');
+
+      else completeMsg.classList.remove('show');
+
+    }
+
+
+
+    function startBreak() {
+
+      hideReportCard();
+
+      clearInterval(timerInterval);
+
+      timerRunning = false;
+
+      timerPhase = 'break';
+
+      timerSeconds = BREAK_SECONDS;
+
+      document.getElementById('timerPhase').textContent = 'Break';
+
+      document.getElementById('timerProgress').classList.add('break-mode');
+
+      document.getElementById('btnStart').disabled = false;
+
+      document.getElementById('btnPause').disabled = true;
+
+      updateTimerDisplay();
+
+      // Auto-start break
+
+      startTimer();
+
+    }
+
+
+
+    function resetToStudy() {
+
+      // Keep undo available — user can undo until next block is reported
+
+      clearInterval(timerInterval);
+
+      timerRunning = false;
+
+      timerPhase = 'study';
+
+      timerSeconds = STUDY_SECONDS;
+
+      document.getElementById('timerPhase').textContent = 'Study Block';
+
+      document.getElementById('timerProgress').classList.remove('break-mode');
+
+      document.getElementById('btnStart').disabled = false;
+
+      document.getElementById('btnPause').disabled = true;
+
+      hideReportCard();
+
+      updateTimerDisplay();
+
+    }
+
+
+
+    function updateTimerDisplay() {
+
+      const m = Math.floor(timerSeconds / 60);
+
+      const s = timerSeconds % 60;
+
+      document.getElementById('timerDisplay').textContent =
+
+        `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+
+
+
+      // Ring progress
+
+      const total = timerPhase === 'study' ? STUDY_SECONDS : BREAK_SECONDS;
+
+      const pct = timerSeconds / total;
+
+      const offset = CIRCUMFERENCE * (1 - pct);
+
+      document.getElementById('timerProgress').style.strokeDasharray = CIRCUMFERENCE;
+
+      document.getElementById('timerProgress').style.strokeDashoffset = offset;
+
+
+
+      // Tab title
+
+      if (timerRunning) {
+
+        document.title = `${m}:${s.toString().padStart(2, '0')} — Focus ELO`;
+
+      } else {
+
+        document.title = 'Focus ELO';
+
+      }
+
+    }
+
+
+
+    // ─── Tabs ───
+
+    function switchTab(name, btnEl) {
+
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+
+      document.getElementById(`panel-${name}`).classList.add('active');
+
+      btnEl.classList.add('active');
+
+    }
+
+
+
+    // ─── Rules toggle ───
+
+    function toggleRules() {
+
+      const toggle = document.getElementById('rulesToggle');
+
+      const content = document.getElementById('rulesContent');
+
+      toggle.classList.toggle('open');
+
+      content.classList.toggle('open');
+
+    }
+
+
+
+    // ─── Toast ───
+
+    function showToast(msg, type) {
+
+      const t = document.getElementById('toast');
+
+      t.textContent = msg;
+
+      t.className = `toast ${type} show`;
+
+      setTimeout(() => t.classList.remove('show'), 3000);
+
+    }
+
+
+
+    // ─── Confetti ───
+
+    function launchConfetti() {
+
+      const container = document.getElementById('confetti');
+
+      const colors = ['#7c5cfc', '#ec4899', '#ffd700', '#22c55e', '#f59e0b', '#c4b5fd'];
+
+      for (let i = 0; i < 60; i++) {
+
+        const el = document.createElement('div');
+
+        el.className = 'confetti';
+
+        el.style.left = Math.random() * 100 + '%';
+
+        el.style.top = '-10px';
+
+        el.style.background = colors[Math.floor(Math.random() * colors.length)];
+
+        el.style.animationDelay = Math.random() * 0.8 + 's';
+
+        el.style.animationDuration = (2 + Math.random() * 2) + 's';
+
+        el.style.width = (5 + Math.random() * 6) + 'px';
+
+        el.style.height = (5 + Math.random() * 6) + 'px';
+
+        container.appendChild(el);
+
+      }
+
+      setTimeout(() => container.innerHTML = '', 5000);
+
+    }
+
+
+
+    // ─── Reset All Data ───
+
+    function showResetModal()  {
+      document.getElementById('resetStartingElo').value = (state && typeof state.startingElo === 'number') ? state.startingElo : 0;
+      document.getElementById('resetModal').style.display = 'flex';
+    }
+
+    function closeResetModal() { document.getElementById('resetModal').style.display = 'none'; }
+
+    function exportData() {
+      if (!state) { showToast('No data to export.', 'demotion'); return; }
+      const data = JSON.stringify(state, null, 2);
+      const blob = new Blob([data], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'FocusELO_backup_' + new Date().toISOString().slice(0,10) + '.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Data exported!', 'promotion');
+    }
+
+    function confirmResetAll() {
+
+      hideUndoBanner();
+      undoSnapshot = null;
+
+      const v = parseInt(document.getElementById('resetStartingElo').value) || 0;
+
+      state = { elo: v, peak: v, history: [], streak: 0, streakType: null, startingElo: v, loggedDays: {} };
+
+      saveState();
+
+      closeResetModal();
+
+      resetToStudy();
+
+      renderAll();
+
+      showToast('All data reset. Starting fresh at ' + v + ' ELO.', 'promotion');
+
+    }
+
+
+
+    // ─── Sound toggle ───
+
+    document.getElementById('soundToggle').addEventListener('click', () => {
+
+      soundEnabled = !soundEnabled;
+
+      document.getElementById('soundToggle').textContent = soundEnabled ? '🔔' : '🔇';
+
+    });
+
+
+
+
+    // --- Calendar ---
+    let calYear = new Date().getFullYear();
+    let calMonth = new Date().getMonth();
+
+    function navigateCalendar(dir) {
+      calMonth += dir;
+      if (calMonth > 11) { calMonth = 0; calYear++; }
+      if (calMonth < 0) { calMonth = 11; calYear--; }
+      renderCalendar();
+    }
+
+    function getLoggedDays() {
+      return (state && state.loggedDays) ? state.loggedDays : {};
+    }
+
+    function getBlocksForDate(dateKey) {
+      return state.history.filter(h => {
+        const d = new Date(h.time);
+        const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        return k === dateKey;
+      });
+    }
+
+    function renderCalendar() {
+      const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+      document.getElementById('calMonthLabel').textContent = `${months[calMonth]} ${calYear}`;
+
+      const grid = document.getElementById('calendarGrid');
+      grid.innerHTML = '';
+
+      const firstDay = new Date(calYear, calMonth, 1).getDay();
+      const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+      const today = new Date();
+      const todayKey = getTodayKey();
+      const logged = getLoggedDays();
+
+      for (let i = 0; i < firstDay; i++) {
+        grid.innerHTML += '<div class="calendar-day empty"></div>';
+      }
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const key = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const isToday = (calYear === today.getFullYear() && calMonth === today.getMonth() && d === today.getDate());
+        const entry = logged[key];
+        const blocks = getBlocksForDate(key);
+
+        let classes = 'calendar-day';
+        if (isToday) classes += ' today';
+
+        let inner = `<span class="calendar-day-num">${d}</span>`;
+        let tooltip = '';
+
+        if (entry) {
+          classes += ' logged';
+          const wins = entry.wins || 0;
+          const losses = entry.losses || 0;
+          if (wins > 0 && losses > 0) classes += ' has-wins has-losses';
+          else if (wins > 0) classes += ' has-wins';
+          else if (losses > 0) classes += ' has-losses';
+
+          if (entry.blocks > 0) {
+            inner += `<span class="calendar-day-blocks">${entry.blocks}b</span>`;
+          }
+          tooltip = `<div class="calendar-day-tooltip">${entry.blocks} blocks \u2022 W${wins} D${entry.draws||0} L${losses} \u2022 ELO ${entry.elo}</div>`;
+        } else if (blocks.length > 0) {
+          inner += `<span class="calendar-day-blocks" style="opacity:.5">${blocks.length}b</span>`;
+        }
+
+        grid.innerHTML += `<div class="${classes}" onclick="showDayDetail('${key}')">${inner}${tooltip}</div>`;
+      }
+
+      const hasBlocks = getTodayBlocks().length > 0;
+      const alreadyLogged = !!logged[todayKey];
+      const btnLog = document.getElementById('btnLogDay');
+      const btnDel = document.getElementById('btnDeleteDay');
+      if (btnLog) {
+        btnLog.disabled = false;
+        btnLog.innerHTML = alreadyLogged ? '&#x1F4C5; Update Today' : '&#x1F4C5; Log Today';
+      }
+      if (btnDel) {
+        btnDel.disabled = !hasBlocks && !alreadyLogged;
+      }
+      // Update main page Log Today button too
+      const btnLogMain = document.getElementById('btnLogDayMain');
+      if (btnLogMain) {
+        btnLogMain.innerHTML = alreadyLogged ? '&#x1F4C5; Update Today' : '&#x1F4C5; Log Today';
+      }
+    }
+
+    function logToday() {
+      if (!state) return;
+      if (!state.loggedDays) state.loggedDays = {};
+      const key = getTodayKey();
+      const blocks = getTodayBlocks();
+      const wins = blocks.filter(b => b.result === 'win').length;
+      const draws = blocks.filter(b => b.result === 'draw').length;
+      const losses = blocks.filter(b => b.result === 'loss').length;
+
+      state.loggedDays[key] = {
+        blocks: blocks.length,
+        wins, draws, losses,
+        elo: state.elo,
+        studyMins: blocks.length * 25,
+        time: Date.now()
+      };
+      saveState();
+      renderCalendar();
+      showToast('Today logged to calendar!', 'promotion');
+    }
+
+    function showDayDetail(dateKey) {
+      const logged = getLoggedDays();
+      const entry = logged[dateKey];
+      const blocks = getBlocksForDate(dateKey);
+      const parts = dateKey.split('-');
+      const dateObj = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
+      const dateStr = dateObj.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+
+      document.getElementById('dayDetailTitle').textContent = dateStr;
+
+      let html = '';
+
+      if (!entry && blocks.length === 0) {
+        html = '<p style="color:var(--text-dim); font-size:0.85rem;">No data recorded for this day.</p>';
+      } else {
+        const w = entry ? (entry.wins||0) : blocks.filter(b=>b.result==='win').length;
+        const d = entry ? (entry.draws||0) : blocks.filter(b=>b.result==='draw').length;
+        const l = entry ? (entry.losses||0) : blocks.filter(b=>b.result==='loss').length;
+        const total = entry ? (entry.blocks||0) : blocks.length;
+        const studyMins = total * 25;
+        const elo = entry ? entry.elo : (blocks.length > 0 ? blocks[blocks.length-1].eloAfter : '—');
+
+        html += '<div class="stats-grid" style="margin-bottom:14px;">';
+        html += `<div class="stat-item"><div class="stat-value">${total}</div><div class="stat-label">Blocks</div></div>`;
+        html += `<div class="stat-item"><div class="stat-value">${Math.floor(studyMins/60)}h ${studyMins%60}m</div><div class="stat-label">Study Time</div></div>`;
+        html += `<div class="stat-item"><div class="stat-value" style="color:var(--gold)">${elo}</div><div class="stat-label">ELO</div></div>`;
+        html += `<div class="stat-item"><div class="stat-value win-color">${w}</div><div class="stat-label">Wins</div></div>`;
+        html += `<div class="stat-item"><div class="stat-value draw-color">${d}</div><div class="stat-label">Draws</div></div>`;
+        html += `<div class="stat-item"><div class="stat-value loss-color">${l}</div><div class="stat-label">Losses</div></div>`;
+        html += '</div>';
+
+        if (blocks.length > 0) {
+          html += '<div style="font-size:0.7rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px; font-weight:600;">Blocks</div>';
+          html += '<div style="display:flex; flex-direction:column; gap:4px; max-height:200px; overflow-y:auto;">';
+          blocks.forEach((b, i) => {
+            const icon = b.result === 'win' ? 'W' : b.result === 'draw' ? 'D' : 'L';
+            const cls = b.result;
+            const dSign = b.delta > 0 ? '+' : '';
+            const dCls = b.delta > 0 ? 'positive' : b.delta < 0 ? 'negative' : 'neutral';
+            const time = new Date(b.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            html += `<div style="display:flex; align-items:center; gap:10px; padding:8px 10px; background:var(--surface2); border-radius:8px; font-size:0.78rem;">`;
+            html += `<span class="history-badge ${cls}" style="width:30px;height:30px;font-size:0.65rem;">${icon}</span>`;
+            html += `<span style="flex:1;">Block #${i+1} · ${time}</span>`;
+            html += `<span class="elo-delta ${dCls}" style="font-family:'JetBrains Mono',monospace;font-weight:600;">${dSign}${b.delta}</span>`;
+            html += '</div>';
+          });
+          html += '</div>';
+        }
+
+        if (!entry) {
+          html += '<p style="color:var(--text-dim); font-size:0.72rem; margin-top:10px; font-style:italic;">Not logged to calendar yet.</p>';
+        }
+      }
+
+      document.getElementById('dayDetailContent').innerHTML = html;
+      document.getElementById('dayDetailModal').style.display = 'flex';
+    }
+
+    function closeDayDetail() {
+      document.getElementById('dayDetailModal').style.display = 'none';
+    }
+
+    function deleteTodayData() {
+      if (!state) return;
+      const key = getTodayKey();
+      const todayBlocks = getTodayBlocks();
+
+      if (todayBlocks.length === 0 && !(state.loggedDays && state.loggedDays[key])) {
+        showToast('No data for today to delete.', 'demotion');
+        return;
+      }
+
+      todayBlocks.forEach(b => {
+        state.elo -= b.delta;
+      });
+      state.history = state.history.filter(h => {
+        const d = new Date(h.time);
+        const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        return k !== key;
+      });
+      state.peak = state.history.reduce((max, h) => Math.max(max, h.eloAfter), Math.max(state.elo, state.startingElo || 0));
+
+      state.streak = 0;
+      state.streakType = null;
+      if (state.history.length > 0) {
+        const last = state.history[state.history.length - 1];
+        let st = 1, sType = last.result;
+        if (sType === 'draw') { st = 0; sType = null; }
+        else {
+          for (let i = state.history.length - 2; i >= 0; i--) {
+            if (state.history[i].result === last.result) st++;
+            else break;
+          }
+        }
+        state.streak = st;
+        state.streakType = sType;
+      }
+
+      if (state.loggedDays && state.loggedDays[key]) {
+        delete state.loggedDays[key];
+      }
+
+      saveState();
+      renderAll();
+      showToast("Today\'s data deleted.", 'demotion');
+    }
+
+    // ─── Reset Day Modal ───
+    function showResetDayModal() {
+      document.getElementById('resetDayElo').value = (state && typeof state.startingElo === 'number') ? state.startingElo : 0;
+      document.getElementById('resetDayModal').style.display = 'flex';
+    }
+    function closeResetDayModal() {
+      document.getElementById('resetDayModal').style.display = 'none';
+    }
+    function confirmResetDay() {
+      if (!state) return;
+      hideUndoBanner();
+      undoSnapshot = null;
+
+      // Remove today's blocks
+      const key = getTodayKey();
+      state.history = state.history.filter(h => {
+        const d = new Date(h.time);
+        const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        return k !== key;
+      });
+      if (state.loggedDays && state.loggedDays[key]) {
+        delete state.loggedDays[key];
+      }
+
+      // Set new starting ELO
+      const v = parseInt(document.getElementById('resetDayElo').value) || 0;
+      state.startingElo = v;
+
+      // Recalculate everything from scratch with new starting ELO
+      if (state.history.length === 0) {
+        state.elo = v;
+        state.peak = v;
+        state.streak = 0;
+        state.streakType = null;
+      } else {
+        recalcFromIndex(0);
+      }
+
+      saveState();
+      closeResetDayModal();
+      resetToStudy();
+      renderAll();
+      showToast('Day reset! Starting ELO set to ' + v + '.', 'promotion');
+    }
+
+
+    // ─── Undo Last Block ───
+    let undoSnapshot = null;
+
+    function captureUndoSnapshot() {
+      return JSON.parse(JSON.stringify(state));
+    }
+
+    function showUndoBanner(result, delta) {
+      const sign = delta > 0 ? '+' : '';
+      const label = result === 'win' ? 'Win' : result === 'draw' ? 'Draw' : 'Loss';
+      document.getElementById('undoMsg').textContent = `${label} recorded (${sign}${delta})`;
+      document.getElementById('undoBanner').classList.add('show');
+    }
+
+    function hideUndoBanner() {
+      document.getElementById('undoBanner').classList.remove('show');
+    }
+
+    function undoLastBlock() {
+      if (!undoSnapshot) return;
+      state = undoSnapshot;
+      undoSnapshot = null;
+      saveState();
+      hideUndoBanner();
+      resetToStudy();
+      renderAll();
+      showToast('Last block undone.', 'demotion');
+    }
+
+    // ─── Edit / Delete Blocks ───
+    let editingBlockIdx = null;
+    let editNewResult = null;
+    let deletingBlockIdx = null;
+
+    function openEditBlockModal(idx) {
+      editingBlockIdx = idx;
+      editNewResult = null;
+      const blockNum = idx + 1;
+      document.getElementById('editBlockNum').textContent = blockNum;
+      document.getElementById('editHonestyCheck').checked = false;
+      document.getElementById('editConfirmBtn').disabled = true;
+      // Clear selection
+      document.querySelectorAll('#editResultOptions .btn').forEach(b => b.classList.remove('selected'));
+      document.getElementById('editBlockModal').style.display = 'flex';
+    }
+
+    function closeEditBlockModal() {
+      document.getElementById('editBlockModal').style.display = 'none';
+      editingBlockIdx = null;
+      editNewResult = null;
+    }
+
+    function selectEditResult(result) {
+      editNewResult = result;
+      document.querySelectorAll('#editResultOptions .btn').forEach(b => b.classList.remove('selected'));
+      const labels = { win: 0, draw: 1, loss: 2 };
+      document.querySelectorAll('#editResultOptions .btn')[labels[result]].classList.add('selected');
+      updateEditConfirmBtn();
+    }
+
+    function updateEditConfirmBtn() {
+      const honest = document.getElementById('editHonestyCheck').checked;
+      document.getElementById('editConfirmBtn').disabled = !(honest && editNewResult);
+    }
+
+    function confirmEditBlock() {
+      if (editingBlockIdx === null || !editNewResult) return;
+      const block = state.history[editingBlockIdx];
+      if (!block) return;
+
+      // If same result, nothing to do
+      if (block.result === editNewResult) {
+        closeEditBlockModal();
+        return;
+      }
+
+      // Recalculate: get the tier at the time of that block
+      // We need to replay from the block before to get the correct tier
+      const eloBefore = block.eloAfter - block.delta;
+      const tierAtTime = getTier(eloBefore);
+      const newDelta = getEloChange(tierAtTime, editNewResult);
+
+      // Update this block
+      block.result = editNewResult;
+      block.delta = newDelta;
+
+      // Recalculate all ELOs from this block forward
+      recalcFromIndex(editingBlockIdx);
+
+      saveState();
+      closeEditBlockModal();
+      renderAll();
+      showToast('Block updated.', 'promotion');
+    }
+
+    function openDeleteBlockModal(idx) {
+      deletingBlockIdx = idx;
+      const blockNum = idx + 1;
+      document.getElementById('deleteBlockNum').textContent = blockNum;
+      document.getElementById('deleteHonestyCheck').checked = false;
+      document.getElementById('deleteConfirmBtn').disabled = true;
+      document.getElementById('deleteBlockModal').style.display = 'flex';
+    }
+
+    function closeDeleteBlockModal() {
+      document.getElementById('deleteBlockModal').style.display = 'none';
+      deletingBlockIdx = null;
+    }
+
+    function updateDeleteConfirmBtn() {
+      document.getElementById('deleteConfirmBtn').disabled = !document.getElementById('deleteHonestyCheck').checked;
+    }
+
+    function confirmDeleteBlock() {
+      if (deletingBlockIdx === null) return;
+
+      // Remove the block
+      state.history.splice(deletingBlockIdx, 1);
+
+      // Recalculate all ELOs from that point
+      if (state.history.length === 0) {
+        state.elo = state.startingElo || 0;
+        state.peak = state.elo;
+        state.streak = 0;
+        state.streakType = null;
+      } else if (deletingBlockIdx === 0) {
+        recalcFromIndex(0);
+      } else {
+        recalcFromIndex(deletingBlockIdx > state.history.length - 1 ? state.history.length - 1 : deletingBlockIdx);
+      }
+
+      saveState();
+      closeDeleteBlockModal();
+      renderAll();
+      showToast('Block deleted.', 'demotion');
+    }
+
+    function recalcFromIndex(startIdx) {
+      // Get ELO just before the startIdx block
+      let elo;
+      if (startIdx === 0) {
+        elo = state.startingElo || 0;
+      } else {
+        elo = state.history[startIdx - 1].eloAfter;
+      }
+
+      // Replay from startIdx onward
+      for (let i = startIdx; i < state.history.length; i++) {
+        const h = state.history[i];
+        const tier = getTier(elo);
+        h.delta = getEloChange(tier, h.result);
+        elo += h.delta;
+        h.eloAfter = elo;
+        h.tier = tier.name;
+      }
+
+      state.elo = elo;
+      state.peak = Math.max(state.startingElo || 0, ...state.history.map(h => h.eloAfter));
+
+      // Recalc streak from end
+      state.streak = 0;
+      state.streakType = null;
+      if (state.history.length > 0) {
+        const last = state.history[state.history.length - 1];
+        if (last.result === 'win' || last.result === 'loss') {
+          let st = 1;
+          for (let i = state.history.length - 2; i >= 0; i--) {
+            if (state.history[i].result === last.result) st++;
+            else break;
+          }
+          state.streak = st;
+          state.streakType = last.result;
+        }
+      }
+    }
+
+    // ─── Boot ───
+
+    updateTimerDisplay();
+
+    init();
+
+  </script>
+
+</body>
+
+</html>
+
+
+
