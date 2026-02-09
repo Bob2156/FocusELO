@@ -1931,6 +1931,13 @@
     .btn-alldone:hover { background:rgba(34,197,94,.25); transform:translateY(-1px); }
     .btn-alldone:disabled { opacity:.4; cursor:not-allowed; transform:none; }
     .all-done-tag { display:inline-block; background:rgba(34,197,94,.12); color:var(--win); font-size:.72rem; font-weight:700; padding:4px 10px; border-radius:6px; margin-bottom:10px; }
+    .day-prestige-medal { text-align:center; padding:16px 14px; margin-bottom:14px; background:linear-gradient(135deg, rgba(236,72,153,0.1) 0%, rgba(167,139,250,0.1) 50%, rgba(255,215,0,0.08) 100%); border:1px solid rgba(236,72,153,0.3); border-radius:14px; animation:prestigeMedalGlow 3s ease-in-out infinite alternate; }
+    @keyframes prestigeMedalGlow { 0% { box-shadow:0 0 12px rgba(236,72,153,0.1); } 100% { box-shadow:0 0 28px rgba(236,72,153,0.2); } }
+    .day-prestige-medal .medal-icon { font-size:2.2rem; margin-bottom:4px; }
+    .day-prestige-medal .medal-title { font-size:0.85rem; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; background:linear-gradient(135deg,#ec4899,#a78bfa,#ffd700); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .day-prestige-medal .medal-sub { font-size:0.7rem; color:var(--text-dim); margin-top:4px; }
+    .calendar-day.all-done { border-color:rgba(236,72,153,.4); box-shadow:0 0 6px rgba(236,72,153,.15); background:linear-gradient(135deg, rgba(236,72,153,0.12), rgba(167,139,250,0.08)); }
+    .calendar-day.all-done .calendar-day-num { color:#f472b6; }
 
     /* Two-column layout for wider screens */
     .two-col { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
@@ -3780,11 +3787,12 @@
           else if (losses > 0) classes += ' has-losses';
 
           if (entry.blocks > 0) {
-            inner += `<span class="calendar-day-blocks">${entry.blocks}b${entry.allDone ? '\u2713' : ''}</span>`;
+            inner += `<span class="calendar-day-blocks">${entry.blocks}b${entry.allDone ? '\u2728' : ''}</span>`;
           } else if (entry.allDone) {
-            inner += `<span class="calendar-day-blocks">\u2713</span>`;
+            inner += `<span class="calendar-day-blocks">\u2728</span>`;
           }
-          const doneLabel = entry.allDone ? ' \u2022 \u2705 All Done' : '';
+          if (entry.allDone) classes += ' all-done';
+          const doneLabel = entry.allDone ? ' \u2022 \uD83C\uDFC6 Prestige' : '';
           tooltip = `<div class="calendar-day-tooltip">${entry.blocks} blocks \u2022 W${wins} D${entry.draws||0} L${losses} \u2022 ELO ${entry.elo}${doneLabel}</div>`;
         } else if (blocks.length > 0) {
           inner += `<span class="calendar-day-blocks" style="opacity:.5">${blocks.length}b</span>`;
@@ -3864,7 +3872,11 @@
         html += '</div>';
 
         if (entry && entry.allDone) {
-          html += '<div class="all-done-tag">\u2705 All Done</div>';
+          html += '<div class="day-prestige-medal">';
+          html += '<div class="medal-icon">\uD83C\uDFC6\u2728</div>';
+          html += '<div class="medal-title">Day Prestige</div>';
+          html += '<div class="medal-sub">All work completed \u2014 Prestige earned for this day</div>';
+          html += '</div>';
         }
 
         if (blocks.length > 0) {
