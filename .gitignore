@@ -5,6 +5,9 @@ dist/
 __pycache__/
 *.pyc
 
+# Dependencies
+node_modules/
+
 # Backups
 index_backup.html
 
